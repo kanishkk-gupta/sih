@@ -764,7 +764,7 @@ function getPeerNetwork() {
             <h1>Peer Network</h1>
             <p>Share peer-recommended internships and discover opportunities from your network</p>
         </div>
-        <div class="card mb-6">
+        <div class="card mb-6 peer-share-card">
             <div class="card-header">
                 <h3 class="card-title">Share an Internship (Peer-Recommended)</h3>
             </div>
@@ -801,12 +801,56 @@ function getPeerNetwork() {
             </div>
         </div>
 
-        <div class="card">
+        <div class="card peer-community-card">
             <div class="card-header">
                 <h3 class="card-title">Community Posts</h3>
+                <div class="card-actions">
+                    <button class="btn btn-sm btn-secondary" id="refreshPeerPostsBtn"><i class="fas fa-sync"></i> Refresh</button>
+                </div>
             </div>
             <div class="card-body">
-                <div id="peerList" class="applications-list"></div>
+                <div id="peerList" class="peer-list-grid"></div>
+            </div>
+        </div>
+
+        <div id="peerEditModal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">Update Post</h3>
+                    <button class="modal-close" id="peerEditClose">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="peerEditForm" class="grid grid-cols-2">
+                        <input type="hidden" name="id" />
+                        <div class="form-group">
+                            <label class="form-label">Title</label>
+                            <input class="form-input" name="title" required />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Company</label>
+                            <input class="form-input" name="company" required />
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-textarea" name="description"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tags (comma separated)</label>
+                            <input class="form-input" name="tags" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Contact Info</label>
+                            <input class="form-input" name="contactInfo" />
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label class="form-label">Application Tips</label>
+                            <textarea class="form-textarea" name="tips"></textarea>
+                        </div>
+                        <div class="form-actions" style="grid-column: span 2;">
+                            <button class="btn btn-primary" type="submit"><i class="fas fa-save"></i> Save Changes</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     `;
@@ -835,21 +879,43 @@ function initializePeerInternshipsApi() {
     function renderPeerItem(item) {
         const tags = (item.tags || []).map(t => `<span class="skill-tag">${t}</span>`).join(' ');
         const postedBy = item.postedBy?.name ? `${item.postedBy.name} (${item.postedBy.email})` : 'Peer';
-        const canDelete = currentUser && (currentRole === 'admin' || String(item.postedBy?.userId) === String(currentUser.id));
+        const itemId = item._id || item.id;
+        const postedByUserId = item.postedBy?.userId ? String(item.postedBy.userId) : '';
+        const canDelete = currentUser && (currentRole === 'admin' || postedByUserId === String(currentUser.id));
+        const canEdit = canDelete;
         return `
-            <div class="application-item">
-                <div class="application-info">
-                    <div class="job-info">
-                        <h4>${item.title} <span class="status-badge info">peer-recommended</span></h4>
-                        <p class="company">${item.company}</p>
-                        <p>${item.description || ''}</p>
-                        <div>${tags}</div>
-                        <p><strong>Contact:</strong> ${item.contactInfo || '—'}</p>
-                        <p><strong>Tips:</strong> ${item.tips || '—'}</p>
-                        <p class="application-date">Shared by ${postedBy} on ${new Date(item.createdAt).toLocaleString()}</p>
+            <div class="peer-card">
+                <div class="peer-card-header">
+                    <div>
+                        <div class="peer-title">${item.title || 'Untitled Opportunity'}</div>
+                        <div class="peer-company"><i class="fas fa-building"></i> ${item.company || '—'}</div>
                     </div>
-                    <div class="application-status">
-                        ${canDelete ? `<button class="btn btn-sm btn-danger" data-id="${item.id}" data-action="delete">Delete</button>` : ''}
+                </div>
+                <div class="peer-card-body">
+                    <div class="peer-field">
+                        <div class="peer-label">Description</div>
+                        <div class="peer-description">${(item.description || '—').replace(/\n/g, '<br/>')}</div>
+                    </div>
+                    <div class="peer-field">
+                        <div class="peer-label">Tags</div>
+                        <div class="peer-tags">${tags || '<span class="skill-tag">No tags</span>'}</div>
+                    </div>
+                    <div class="peer-meta-grid">
+                        <div class="peer-field">
+                            <div class="peer-label">Contact</div>
+                            <div>${item.contactInfo || '—'}</div>
+                        </div>
+                        <div class="peer-field">
+                            <div class="peer-label">Tips</div>
+                            <div>${item.tips || '—'}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="peer-card-footer">
+                    <span class="peer-posted-by">Shared by ${postedBy} on ${new Date(item.createdAt).toLocaleString()}</span>
+                    <div class="peer-actions">
+                        ${canEdit ? `<button class="btn btn-sm btn-secondary" data-id="${itemId}" data-action="edit"><i class="fas fa-edit"></i> Update</button>` : ''}
+                        ${canDelete ? `<button class="btn btn-sm btn-danger" data-id="${itemId}" data-action="delete"><i class="fas fa-trash"></i> Delete</button>` : ''}
                     </div>
                 </div>
             </div>
@@ -884,16 +950,79 @@ function initializePeerInternshipsApi() {
     });
 
     list.addEventListener('click', async (e) => {
-        const btn = e.target.closest('button[data-action="delete"]');
-        if (!btn) return;
-        const id = btn.getAttribute('data-id');
+        const delBtn = e.target.closest('button[data-action="delete"]');
+        const editBtn = e.target.closest('button[data-action="edit"]');
+        if (delBtn) {
+            const id = delBtn.getAttribute('data-id');
+            try {
+                const res = await fetch(`/api/peer-posts/${id}`, { method: 'DELETE', credentials: 'include' });
+                if (!res.ok) throw new Error();
+                showNotification('Post deleted', 'info');
+                refreshList();
+            } catch {
+                showNotification('Delete failed. Not authorized?', 'error');
+            }
+            return;
+        }
+        if (editBtn) {
+            openEditModal(editBtn.getAttribute('data-id'));
+            return;
+        }
+    });
+
+    const refreshBtn = document.getElementById('refreshPeerPostsBtn');
+    if (refreshBtn) refreshBtn.addEventListener('click', refreshList);
+
+    // Modal logic
+    const modal = document.getElementById('peerEditModal');
+    const modalClose = document.getElementById('peerEditClose');
+    const editForm = document.getElementById('peerEditForm');
+
+    function openEditModal(id) {
+        fetch('/api/peer-posts', { credentials: 'include' })
+            .then(r => r.json())
+            .then(items => items.find(x => String(x._id || x.id) === String(id)))
+            .then(item => {
+                if (!item) return;
+                editForm.elements['id'].value = item._id || item.id;
+                editForm.elements['title'].value = item.title || '';
+                editForm.elements['company'].value = item.company || '';
+                editForm.elements['description'].value = item.description || '';
+                editForm.elements['tags'].value = (item.tags || []).join(', ');
+                editForm.elements['contactInfo'].value = item.contactInfo || '';
+                editForm.elements['tips'].value = item.tips || '';
+                modal.style.display = 'block';
+            }).catch(() => {});
+    }
+
+    if (modalClose) modalClose.addEventListener('click', () => { modal.style.display = 'none'; });
+    window.addEventListener('click', (evt) => { if (evt.target === modal) modal.style.display = 'none'; });
+
+    if (editForm) editForm.addEventListener('submit', async (evt) => {
+        evt.preventDefault();
+        const formData = Object.fromEntries(new FormData(editForm).entries());
+        const id = formData.id;
+        const body = {
+            title: formData.title,
+            company: formData.company,
+            description: formData.description || '',
+            tags: (formData.tags || '').split(',').map(s => s.trim()).filter(Boolean),
+            contactInfo: formData.contactInfo || '',
+            tips: formData.tips || ''
+        };
         try {
-            const res = await fetch(`/api/peer-posts/${id}`, { method: 'DELETE', credentials: 'include' });
+            const res = await fetch(`/api/peer-posts/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(body)
+            });
             if (!res.ok) throw new Error();
-            showNotification('Post deleted', 'info');
+            showNotification('Post updated successfully', 'success');
+            modal.style.display = 'none';
             refreshList();
         } catch {
-            showNotification('Delete failed. Not authorized?', 'error');
+            showNotification('Update failed. Not authorized?', 'error');
         }
     });
 

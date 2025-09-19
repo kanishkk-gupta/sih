@@ -8,6 +8,10 @@ const morgan = require('morgan');
 const path = require('path');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_key_change_me';
+const CORS_ORIGIN = process.env.CORS_ORIGIN || process.env.ORIGIN || true;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const COOKIE_SECURE = String(process.env.COOKIE_SECURE || '').toLowerCase() === 'true' || NODE_ENV === 'production';
+const COOKIE_SAMESITE = process.env.COOKIE_SAMESITE || (COOKIE_SECURE ? 'none' : 'lax');
 
 // Schemas
 const userSchema = new mongoose.Schema({
@@ -72,7 +76,7 @@ const PeerPost = mongoose.model('PeerPost', peerPostSchema);
 
 // App
 const app = express();
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
 app.use(cookieParser());
 app.use(express.json());
 app.use(morgan('dev'));
@@ -130,8 +134,8 @@ app.post('/api/auth/login', async (req, res) => {
 	if (!user) return res.status(401).json({ message: 'Invalid credentials' });
 	const ok = bcrypt.compareSync(password, user.passwordHash);
 	if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
-	const token = jwt.sign({ id: user._id, role: user.role, name: user.name, email: user.email }, JWT_SECRET, { expiresIn: '1d' });
-	res.cookie('token', token, { httpOnly: true, sameSite: 'lax' });
+    const token = jwt.sign({ id: user._id, role: user.role, name: user.name, email: user.email }, JWT_SECRET, { expiresIn: '1d' });
+    res.cookie('token', token, { httpOnly: true, sameSite: COOKIE_SAMESITE, secure: COOKIE_SECURE });
 	res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
 });
 
@@ -236,8 +240,10 @@ app.post('/api/certificates', requireAuth, requireRole('admin', 'mentor'), async
 
 // Peer posts
 app.get('/api/peer-posts', requireAuth, async (req, res) => {
-	const list = await PeerPost.find().sort({ createdAt: -1 }).lean();
-	res.json(list);
+    const list = await PeerPost.find().sort({ createdAt: -1 }).lean();
+    // include convenient id alias for frontend
+    const mapped = list.map(p => ({ ...p, id: String(p._id) }));
+    res.json(mapped);
 });
 app.post('/api/peer-posts', requireAuth, requireRole('student', 'admin'), async (req, res) => {
 	const body = req.body || {};
@@ -250,7 +256,24 @@ app.post('/api/peer-posts', requireAuth, requireRole('student', 'admin'), async 
 		tips: body.tips,
 		postedBy: { userId: req.user.id, name: req.user.name, email: req.user.email }
 	});
-	res.status(201).json(post);
+    const json = post.toJSON();
+    res.status(201).json({ ...json, id: String(json._id) });
+});
+app.put('/api/peer-posts/:id', requireAuth, async (req, res) => {
+    const post = await PeerPost.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: 'Not found' });
+    const isOwner = String(post.postedBy?.userId) === String(req.user.id);
+    if (!(isOwner || req.user.role === 'admin')) return res.status(403).json({ message: 'Forbidden' });
+    const body = req.body || {};
+    post.title = body.title ?? post.title;
+    post.company = body.company ?? post.company;
+    post.description = body.description ?? post.description;
+    post.tags = Array.isArray(body.tags) ? body.tags : post.tags;
+    post.contactInfo = body.contactInfo ?? post.contactInfo;
+    post.tips = body.tips ?? post.tips;
+    await post.save();
+    const json = post.toJSON();
+    res.json({ ...json, id: String(json._id) });
 });
 app.delete('/api/peer-posts/:id', requireAuth, async (req, res) => {
 	const post = await PeerPost.findById(req.params.id);
