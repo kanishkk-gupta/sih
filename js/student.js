@@ -211,122 +211,259 @@ function getStudentProfile() {
             <p>Manage your personal information and preferences</p>
         </div>
 
-        <div class="grid grid-cols-3">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Profile Picture</h3>
-                </div>
-                <div class="card-body text-center">
-                    <div class="profile-picture-container">
-                        <div class="profile-picture">
-                            <i class="fas fa-user"></i>
+        <!-- Resume Upload Section -->
+        <div class="card mb-6">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-file-upload"></i> Resume Upload & Auto-Parse
+                </h3>
+                <p class="text-sm text-gray-600">Upload your PDF resume and we'll automatically extract all your details</p>
+            </div>
+            <div class="card-body">
+                <div class="resume-upload-section">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-content">
+                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                            <h4>Drop your resume here or click to browse</h4>
+                            <p>Supports PDF files up to 5MB</p>
+                            <input type="file" id="resumeFile" accept=".pdf" style="display: none;">
+                            <button class="btn btn-primary" onclick="document.getElementById('resumeFile').click()">
+                                <i class="fas fa-upload"></i> Choose File
+                            </button>
                         </div>
-                        <button class="btn btn-sm btn-primary mt-4">Change Picture</button>
+                    </div>
+                    <div class="upload-progress" id="uploadProgress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <p class="progress-text" id="progressText">Uploading and parsing resume...</p>
+                    </div>
+                    <div class="upload-success" id="uploadSuccess" style="display: none;">
+                        <i class="fas fa-check-circle text-green-500"></i>
+                        <p>Resume uploaded and parsed successfully! Your profile has been updated.</p>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="card" style="grid-column: span 2;">
-                <div class="card-header">
-                    <h3 class="card-title">Personal Information</h3>
+        <!-- Profile Overview Section -->
+        <div class="profile-overview-section mb-6">
+            <div class="profile-header">
+                <div class="profile-picture-section">
+                    <div class="profile-picture-container">
+                        <div class="profile-picture" id="profilePicture">
+                            <img id="profileImage" src="" alt="Profile Picture" style="display: none;">
+                            <i class="fas fa-user" id="profileIcon"></i>
+                        </div>
+                        <div class="profile-picture-actions">
+                            <input type="file" id="profilePictureInput" accept="image/*" style="display: none;">
+                            <button class="btn btn-sm btn-primary" onclick="document.getElementById('profilePictureInput').click()">
+                                <i class="fas fa-camera"></i> Change Photo
+                            </button>
+                            <button class="btn btn-sm btn-secondary" onclick="removeProfilePicture()" id="removePictureBtn" style="display: none;">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form id="profileForm">
-                        <div class="grid grid-cols-2">
-                            <div class="form-group">
-                                <label class="form-label">Full Name</label>
-                                <input type="text" class="form-input" value="${currentUser.name}" name="name">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Email</label>
-                                <input type="email" class="form-input" value="john@example.com" name="email">
-                            </div>
+                <div class="profile-info">
+                    <h2 id="profileDisplayName">${currentUser.name}</h2>
+                    <p class="profile-email" id="profileDisplayEmail">john@example.com</p>
+                    <div class="profile-badges">
+                        <span class="badge badge-primary" id="profileDepartmentBadge">Computer Science</span>
+                        <span class="badge badge-secondary" id="profileYearBadge">4th Year</span>
+                        <span class="badge badge-success" id="profileCgpaBadge">CGPA: 8.5</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Personal Information Section -->
+        <div class="card mb-6">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-user-edit"></i> Personal Information
+                </h3>
+                <button class="btn btn-sm btn-outline" id="editProfileBtn" onclick="toggleProfileEdit()">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+            </div>
+            <div class="card-body">
+                <form id="profileForm">
+                    <div class="profile-form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-input" value="${currentUser.name}" name="name" id="profileName" readonly>
                         </div>
-                        <div class="grid grid-cols-2">
-                            <div class="form-group">
-                                <label class="form-label">Phone Number</label>
-                                <input type="tel" class="form-input" value="+91 9876543210" name="phone">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Date of Birth</label>
-                                <input type="date" class="form-input" value="2001-05-15" name="dob">
-                            </div>
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-input" value="john@example.com" name="email" id="profileEmail" readonly>
                         </div>
-                        <div class="grid grid-cols-2">
-                            <div class="form-group">
-                                <label class="form-label">Department</label>
-                                <select class="form-select" name="department">
-                                    <option value="Computer Science" selected>Computer Science</option>
-                                    <option value="Electronics">Electronics</option>
-                                    <option value="Mechanical">Mechanical</option>
-                                    <option value="Civil">Civil</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Year</label>
-                                <select class="form-select" name="year">
-                                    <option value="1st Year">1st Year</option>
-                                    <option value="2nd Year">2nd Year</option>
-                                    <option value="3rd Year">3rd Year</option>
-                                    <option value="4th Year" selected>4th Year</option>
-                                </select>
-                            </div>
+                        <div class="form-group">
+                            <label class="form-label">Phone Number</label>
+                            <input type="tel" class="form-input" value="+91 9876543210" name="phone" id="profilePhone" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date of Birth</label>
+                            <input type="date" class="form-input" value="2001-05-15" name="dob" id="profileDob" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Department</label>
+                            <select class="form-select" name="department" id="profileDepartment" disabled>
+                                <option value="Computer Science" selected>Computer Science</option>
+                                <option value="Electronics">Electronics</option>
+                                <option value="Mechanical">Mechanical</option>
+                                <option value="Civil">Civil</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Year of Study</label>
+                            <select class="form-select" name="year" id="profileYear" disabled>
+                                <option value="1st Year">1st Year</option>
+                                <option value="2nd Year">2nd Year</option>
+                                <option value="3rd Year">3rd Year</option>
+                                <option value="4th Year" selected>4th Year</option>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label">CGPA</label>
-                            <input type="number" step="0.01" class="form-input" value="8.5" name="cgpa">
+                            <input type="number" step="0.01" class="form-input" value="8.5" name="cgpa" id="profileCgpa" readonly>
                         </div>
-                    </form>
-                </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">Cover Letter</label>
+                            <textarea class="form-textarea" name="coverLetter" id="profileCoverLetter" rows="4" placeholder="Tell us about yourself..." readonly>I am a passionate computer science student with a strong interest in software development and problem-solving. I enjoy working on challenging projects and learning new technologies.</textarea>
+                        </div>
+                    </div>
+                    <div class="form-actions" id="profileFormActions" style="display: none;">
+                        <button type="button" class="btn btn-secondary" onclick="cancelProfileEdit()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
 
-        <div class="card mt-6">
+        <!-- Skills Section -->
+        <div class="card mb-6">
             <div class="card-header">
-                <h3 class="card-title">Skills & Technologies</h3>
+                <h3 class="card-title">
+                    <i class="fas fa-code"></i> Skills & Technologies
+                </h3>
+                <button class="btn btn-sm btn-outline" onclick="toggleSkillsEdit()" id="editSkillsBtn">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
             </div>
             <div class="card-body">
-                <div class="skills-section">
-                    <div class="current-skills">
-                        <h4>Current Skills</h4>
-                        <div class="skills-list">
-                            <span class="skill-tag">JavaScript</span>
-                            <span class="skill-tag">Python</span>
-                            <span class="skill-tag">React</span>
-                            <span class="skill-tag">Node.js</span>
-                            <span class="skill-tag">SQL</span>
-                        </div>
+                <div class="skills-display" id="skillsDisplay">
+                    <div class="skills-grid" id="skillsList">
+                        <!-- Skills will be populated here -->
                     </div>
-                    <div class="add-skills">
-                        <h4>Add New Skills</h4>
-                        <div class="add-skill-form">
+                </div>
+                <div class="skills-edit" id="skillsEdit" style="display: none;">
+                    <div class="add-skill-form">
+                        <div class="input-group">
                             <input type="text" placeholder="Enter skill name" class="form-input" id="newSkill">
-                            <button class="btn btn-primary" onclick="addSkill()">Add Skill</button>
+                            <button class="btn btn-primary" onclick="addSkill()">
+                                <i class="fas fa-plus"></i> Add
+                            </button>
                         </div>
+                    </div>
+                    <div class="skills-actions">
+                        <button class="btn btn-secondary" onclick="cancelSkillsEdit()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button class="btn btn-primary" onclick="saveSkills()">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="card mt-6">
+        <!-- Academic Projects Section -->
+        <div class="card mb-6">
             <div class="card-header">
-                <h3 class="card-title">Academic Projects</h3>
-                <button class="btn btn-primary" onclick="addProject()">Add Project</button>
+                <h3 class="card-title">
+                    <i class="fas fa-project-diagram"></i> Academic Projects
+                </h3>
+                <button class="btn btn-sm btn-outline" onclick="toggleProjectsEdit()" id="editProjectsBtn">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
             </div>
             <div class="card-body">
-                <div class="projects-list">
-                    <div class="project-item">
-                        <h4>E-commerce Web Application</h4>
-                        <p>Built using React, Node.js, and MongoDB. Features include user authentication, product catalog, and payment integration.</p>
-                        <div class="project-tags">
-                            <span class="tag">React</span>
-                            <span class="tag">Node.js</span>
-                            <span class="tag">MongoDB</span>
+                <div class="projects-display" id="projectsDisplay">
+                    <div class="projects-grid" id="projectsList">
+                        <!-- Projects will be populated here -->
+                    </div>
+                </div>
+                <div class="projects-edit" id="projectsEdit" style="display: none;">
+                    <div class="add-project-form">
+                        <div class="form-group">
+                            <label class="form-label">Project Title</label>
+                            <input type="text" class="form-input" id="projectTitle" placeholder="Enter project title">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-textarea" id="projectDescription" rows="3" placeholder="Describe your project"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Technologies Used</label>
+                            <input type="text" class="form-input" id="projectTechnologies" placeholder="e.g., React, Node.js, MongoDB (comma separated)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Duration</label>
+                            <input type="text" class="form-input" id="projectDuration" placeholder="e.g., 3 months, 2023">
                         </div>
                         <div class="project-actions">
-                            <button class="btn btn-sm btn-secondary">Edit</button>
-                            <button class="btn btn-sm btn-danger">Delete</button>
+                            <button class="btn btn-primary" onclick="addProject()">
+                                <i class="fas fa-plus"></i> Add Project
+                            </button>
                         </div>
+                    </div>
+                    <div class="projects-actions">
+                        <button class="btn btn-secondary" onclick="cancelProjectsEdit()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button class="btn btn-primary" onclick="saveProjects()">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Experience Section -->
+        <div class="card mt-6">
+            <div class="card-header">
+                <h3 class="card-title">Work Experience</h3>
+            </div>
+            <div class="card-body">
+                <div class="experience-list" id="experienceList">
+                    <div class="experience-item">
+                        <h4>Software Developer Intern</h4>
+                        <p class="company">TechCorp Inc.</p>
+                        <p class="duration">June 2023 - August 2023</p>
+                        <p class="description">Developed web applications using React and Node.js. Collaborated with team on various projects.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Education Section -->
+        <div class="card mt-6">
+            <div class="card-header">
+                <h3 class="card-title">Education</h3>
+            </div>
+            <div class="card-body">
+                <div class="education-list" id="educationList">
+                    <div class="education-item">
+                        <h4>Bachelor of Technology in Computer Science</h4>
+                        <p class="institution">University Name</p>
+                        <p class="duration">2020 - 2024</p>
+                        <p class="cgpa">CGPA: 8.5/10</p>
                     </div>
                 </div>
             </div>
@@ -625,7 +762,7 @@ function addSkill() {
     const skill = skillInput.value.trim();
     
     if (skill) {
-        const skillsList = document.querySelector('.skills-list');
+        const skillsList = document.getElementById('skillsList');
         const skillTag = document.createElement('span');
         skillTag.className = 'skill-tag';
         skillTag.innerHTML = `${skill} <button onclick="removeSkill(this)">×</button>`;
@@ -640,6 +777,68 @@ function removeSkill(button) {
     showNotification('Skill removed successfully!', 'info');
 }
 
+function addProject() {
+    const title = document.getElementById('projectTitle').value.trim();
+    const description = document.getElementById('projectDescription').value.trim();
+    const technologies = document.getElementById('projectTechnologies').value.trim();
+    const duration = document.getElementById('projectDuration').value.trim();
+    
+    if (title && description) {
+        const projectsList = document.getElementById('projectsList');
+        const projectItem = document.createElement('div');
+        projectItem.className = 'project-item';
+        
+        const techArray = technologies ? technologies.split(',').map(t => t.trim()) : [];
+        const techTags = techArray.map(tech => `<span class="tag">${tech}</span>`).join('');
+        
+        projectItem.innerHTML = `
+            <h4>${title}</h4>
+            <p>${description}</p>
+            <div class="project-tags">
+                ${techTags}
+            </div>
+            <div class="project-duration">${duration}</div>
+            <div class="project-actions">
+                <button class="btn btn-sm btn-secondary" onclick="editProject(this)">Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="removeProject(this)">Delete</button>
+            </div>
+        `;
+        
+        projectsList.appendChild(projectItem);
+        
+        // Clear form
+        document.getElementById('projectTitle').value = '';
+        document.getElementById('projectDescription').value = '';
+        document.getElementById('projectTechnologies').value = '';
+        document.getElementById('projectDuration').value = '';
+        
+        showNotification('Project added successfully!', 'success');
+    } else {
+        showNotification('Please fill in at least title and description', 'error');
+    }
+}
+
+function removeProject(button) {
+    button.closest('.project-item').remove();
+    showNotification('Project removed successfully!', 'info');
+}
+
+function editProject(button) {
+    // Simple edit functionality - could be enhanced with a modal
+    const projectItem = button.closest('.project-item');
+    const title = projectItem.querySelector('h4').textContent;
+    const description = projectItem.querySelector('p').textContent;
+    
+    // For now, just remove and let user add again
+    projectItem.remove();
+    
+    // Pre-fill the form
+    document.getElementById('projectTitle').value = title;
+    document.getElementById('projectDescription').value = description;
+    
+    showNotification('Project moved to form for editing', 'info');
+}
+
 function saveProfile() {
     showNotification('Profile updated successfully!', 'success');
     // Implement profile save logic
@@ -647,6 +846,732 @@ function saveProfile() {
 
 function initializeProfileForm() {
     // Add form validation and enhancement logic
+    loadUserProfile();
+    setupResumeUpload();
+    setupProfilePictureUpload();
+    setupProfileFormSubmission();
+}
+
+// Setup profile form submission
+function setupProfileFormSubmission() {
+    const profileForm = document.getElementById('profileForm');
+    if (profileForm) {
+        profileForm.addEventListener('submit', handleProfileFormSubmit);
+    }
+}
+
+// Handle profile form submission
+async function handleProfileFormSubmit(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const profileData = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        phone: formData.get('phone'),
+        dateOfBirth: formData.get('dob'),
+        department: formData.get('department'),
+        year: formData.get('year'),
+        cgpa: parseFloat(formData.get('cgpa')),
+        coverLetter: formData.get('coverLetter')
+    };
+    
+    try {
+        const response = await fetch('/api/profile', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify(profileData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showNotification('Profile updated successfully!', 'success');
+            // Update the display values
+            updateProfileDisplay(profileData);
+            // Switch back to view mode
+            toggleProfileEdit();
+        } else {
+            throw new Error(data.message || 'Failed to update profile');
+        }
+    } catch (error) {
+        console.error('Profile update error:', error);
+        showNotification('Failed to update profile: ' + error.message, 'error');
+    }
+}
+
+// Update profile display after successful update
+function updateProfileDisplay(profileData) {
+    // Update profile overview section
+    if (profileData.name) {
+        document.getElementById('profileDisplayName').textContent = profileData.name;
+    }
+    if (profileData.email) {
+        document.getElementById('profileDisplayEmail').textContent = profileData.email;
+    }
+    if (profileData.department) {
+        document.getElementById('profileDepartmentBadge').textContent = profileData.department;
+    }
+    if (profileData.year) {
+        document.getElementById('profileYearBadge').textContent = profileData.year;
+    }
+    if (profileData.cgpa) {
+        document.getElementById('profileCgpaBadge').textContent = `CGPA: ${profileData.cgpa}`;
+    }
+}
+
+// Load user profile data
+async function loadUserProfile() {
+    try {
+        const response = await fetch('/api/profile', {
+            credentials: 'include'
+        });
+        const data = await response.json();
+        
+        if (data.user && data.user.profile) {
+            updateProfileForm(data.user);
+        }
+    } catch (error) {
+        console.error('Error loading profile:', error);
+    }
+}
+
+// Update profile form with user data
+function updateProfileForm(user) {
+    const profile = user.profile || {};
+    
+    // Update basic info
+    if (profile.name) document.getElementById('profileName').value = profile.name;
+    if (profile.email) document.getElementById('profileEmail').value = profile.email;
+    if (profile.phone) document.getElementById('profilePhone').value = profile.phone;
+    if (profile.dateOfBirth) document.getElementById('profileDob').value = profile.dateOfBirth.split('T')[0];
+    if (profile.department) document.getElementById('profileDepartment').value = profile.department;
+    if (profile.year) document.getElementById('profileYear').value = profile.year;
+    if (profile.cgpa) document.getElementById('profileCgpa').value = profile.cgpa;
+    
+    // Update skills
+    if (profile.skills && profile.skills.length > 0) {
+        updateSkillsList(profile.skills);
+    }
+    
+    // Update projects
+    if (profile.projects && profile.projects.length > 0) {
+        updateProjectsList(profile.projects);
+    }
+    
+    // Update experience
+    if (profile.experience && profile.experience.length > 0) {
+        updateExperienceList(profile.experience);
+    }
+    
+    // Update education
+    if (profile.education && profile.education.length > 0) {
+        updateEducationList(profile.education);
+    }
+}
+
+// Update skills list
+function updateSkillsList(skills) {
+    const skillsList = document.getElementById('skillsList');
+    if (skillsList) {
+        skillsList.innerHTML = skills.map(skill => 
+            `<span class="skill-tag">${skill} <button onclick="removeSkill(this)">×</button></span>`
+        ).join('');
+    }
+}
+
+// Update projects list
+function updateProjectsList(projects) {
+    const projectsList = document.getElementById('projectsList');
+    if (projectsList) {
+        projectsList.innerHTML = projects.map(project => `
+            <div class="project-item">
+                <h4>${project.title || 'Untitled Project'}</h4>
+                <p>${project.description || 'No description available'}</p>
+                <div class="project-tags">
+                    ${(project.technologies || []).map(tech => `<span class="tag">${tech}</span>`).join('')}
+                </div>
+                <div class="project-actions">
+                    <button class="btn btn-sm btn-secondary">Edit</button>
+                    <button class="btn btn-sm btn-danger">Delete</button>
+                </div>
+            </div>
+        `).join('');
+    }
+}
+
+// Update experience list
+function updateExperienceList(experience) {
+    const experienceList = document.getElementById('experienceList');
+    if (experienceList) {
+        experienceList.innerHTML = experience.map(exp => `
+            <div class="experience-item">
+                <h4>${exp.position || 'Position'}</h4>
+                <p class="company">${exp.company || 'Company'}</p>
+                <p class="duration">${formatDateRange(exp.startDate, exp.endDate, exp.current)}</p>
+                <p class="description">${exp.description || 'No description available'}</p>
+            </div>
+        `).join('');
+    }
+}
+
+// Update education list
+function updateEducationList(education) {
+    const educationList = document.getElementById('educationList');
+    if (educationList) {
+        educationList.innerHTML = education.map(edu => `
+            <div class="education-item">
+                <h4>${edu.degree || 'Degree'} ${edu.field ? `in ${edu.field}` : ''}</h4>
+                <p class="institution">${edu.institution || 'Institution'}</p>
+                <p class="duration">${formatDateRange(edu.startDate, edu.endDate, edu.current)}</p>
+                ${edu.cgpa ? `<p class="cgpa">CGPA: ${edu.cgpa}</p>` : ''}
+            </div>
+        `).join('');
+    }
+}
+
+// Format date range
+function formatDateRange(startDate, endDate, current) {
+    if (!startDate) return 'Duration not specified';
+    
+    const start = new Date(startDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    const end = current ? 'Present' : (endDate ? new Date(endDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '');
+    
+    return `${start} - ${end}`;
+}
+
+// Setup resume upload functionality
+function setupResumeUpload() {
+    const fileInput = document.getElementById('resumeFile');
+    const uploadArea = document.getElementById('uploadArea');
+    
+    if (fileInput) {
+        fileInput.addEventListener('change', handleResumeUpload);
+    }
+    
+    if (uploadArea) {
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('dragleave', handleDragLeave);
+        uploadArea.addEventListener('drop', handleDrop);
+        uploadArea.addEventListener('click', () => fileInput.click());
+    }
+}
+
+// Handle resume upload
+async function handleResumeUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (file.type !== 'application/pdf') {
+        showNotification('Please select a PDF file', 'error');
+        return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+        showNotification('File size must be less than 5MB', 'error');
+        return;
+    }
+    
+    await uploadResume(file);
+}
+
+// Handle drag and drop
+function handleDragOver(e) {
+    e.preventDefault();
+    e.currentTarget.classList.add('drag-over');
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        const file = files[0];
+        if (file.type === 'application/pdf') {
+            uploadResume(file);
+        } else {
+            showNotification('Please drop a PDF file', 'error');
+        }
+    }
+}
+
+// Upload resume to server
+async function uploadResume(file) {
+    const formData = new FormData();
+    formData.append('resume', file);
+    
+    // Show progress
+    showUploadProgress();
+    
+    try {
+        const response = await fetch('/api/resume/upload', {
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showUploadSuccess();
+            updateProfileForm({ profile: data.profile });
+            showNotification('Resume uploaded and parsed successfully!', 'success');
+        } else {
+            throw new Error(data.message || 'Upload failed');
+        }
+    } catch (error) {
+        console.error('Upload error:', error);
+        showNotification('Failed to upload resume: ' + error.message, 'error');
+        hideUploadProgress();
+    }
+}
+
+// Show upload progress
+function showUploadProgress() {
+    document.getElementById('uploadArea').style.display = 'none';
+    document.getElementById('uploadProgress').style.display = 'block';
+    document.getElementById('uploadSuccess').style.display = 'none';
+}
+
+// Show upload success
+function showUploadSuccess() {
+    document.getElementById('uploadArea').style.display = 'none';
+    document.getElementById('uploadProgress').style.display = 'none';
+    document.getElementById('uploadSuccess').style.display = 'block';
+    
+    // Reset after 3 seconds
+    setTimeout(() => {
+        document.getElementById('uploadArea').style.display = 'block';
+        document.getElementById('uploadSuccess').style.display = 'none';
+    }, 3000);
+}
+
+// Hide upload progress
+function hideUploadProgress() {
+    document.getElementById('uploadArea').style.display = 'block';
+    document.getElementById('uploadProgress').style.display = 'none';
+    document.getElementById('uploadSuccess').style.display = 'none';
+}
+
+// Generate career guidance
+async function generateCareerGuidance() {
+    const loading = document.getElementById('guidanceLoading');
+    const content = document.getElementById('guidanceContent');
+    
+    loading.style.display = 'block';
+    content.innerHTML = '';
+    
+    try {
+        const response = await fetch('/api/career-guidance', {
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            const guidance = data.guidance;
+            content.innerHTML = renderStructuredGuidance(guidance);
+        } else {
+            throw new Error(data.message || 'Failed to generate guidance');
+        }
+    } catch (error) {
+        console.error('Guidance error:', error);
+        content.innerHTML = `
+            <div class="guidance-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Failed to generate career guidance: ${error.message}</p>
+            </div>
+        `;
+    } finally {
+        loading.style.display = 'none';
+    }
+}
+
+// Render structured guidance with visual indicators
+function renderStructuredGuidance(guidance) {
+    return `
+        <div class="guidance-dashboard">
+            <!-- Overall Score Card -->
+            <div class="score-card">
+                <div class="score-circle ${getScoreClass(guidance.overallScore)}">
+                    <div class="score-number">${guidance.overallScore}</div>
+                    <div class="score-label">Overall Score</div>
+                </div>
+                <div class="score-details">
+                    <h3 class="score-status ${getStatusClass(guidance.overallStatus)}">${guidance.overallStatus}</h3>
+                    <p class="score-message">${guidance.overallMessage}</p>
+                </div>
+            </div>
+
+            <!-- Strengths & Improvements Grid -->
+            <div class="guidance-grid">
+                <div class="guidance-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-check-circle text-green"></i>
+                        Strengths
+                    </h3>
+                    <div class="items-list">
+                        ${guidance.strengths.map(item => `
+                            <div class="guidance-item strength-item">
+                                <div class="item-header">
+                                    <span class="item-title">${item.title}</span>
+                                    <span class="status-badge ${getStatusClass(item.status)}">${item.status}</span>
+                                </div>
+                                <p class="item-description">${item.description}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="guidance-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-exclamation-triangle text-orange"></i>
+                        Areas for Improvement
+                    </h3>
+                    <div class="items-list">
+                        ${guidance.improvements.map(item => `
+                            <div class="guidance-item improvement-item">
+                                <div class="item-header">
+                                    <span class="item-title">${item.title}</span>
+                                    <span class="priority-badge ${getPriorityClass(item.priority)}">${item.priority}</span>
+                                </div>
+                                <p class="item-description">${item.description}</p>
+                                <div class="action-item">
+                                    <i class="fas fa-lightbulb"></i>
+                                    <span>${item.action}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Career Paths -->
+            <div class="career-paths-section">
+                <h3 class="section-title">
+                    <i class="fas fa-route text-blue"></i>
+                    Recommended Career Paths
+                </h3>
+                <div class="career-paths-grid">
+                    ${guidance.careerPaths.map(path => `
+                        <div class="career-path-card">
+                            <div class="path-header">
+                                <h4 class="path-title">${path.title}</h4>
+                                <div class="match-score ${getMatchClass(path.match)}">
+                                    ${path.match}% Match
+                                </div>
+                            </div>
+                            <p class="path-description">${path.description}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            <!-- Next Steps -->
+            <div class="next-steps-section">
+                <h3 class="section-title">
+                    <i class="fas fa-tasks text-purple"></i>
+                    Next Steps
+                </h3>
+                <div class="steps-timeline">
+                    ${guidance.nextSteps.map((step, index) => `
+                        <div class="timeline-item">
+                            <div class="timeline-marker ${getPriorityClass(step.priority)}">${index + 1}</div>
+                            <div class="timeline-content">
+                                <div class="step-header">
+                                    <span class="step-action">${step.action}</span>
+                                    <span class="step-timeline">${step.timeline}</span>
+                                </div>
+                                <span class="priority-tag ${getPriorityClass(step.priority)}">${step.priority} priority</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            <!-- Skill Gaps -->
+            <div class="skill-gaps-section">
+                <h3 class="section-title">
+                    <i class="fas fa-graduation-cap text-red"></i>
+                    Skill Gaps to Address
+                </h3>
+                <div class="skill-gaps-grid">
+                    ${guidance.skillGaps.map(skill => `
+                        <div class="skill-gap-card">
+                            <div class="skill-header">
+                                <h4 class="skill-name">${skill.skill}</h4>
+                                <span class="importance-badge ${getPriorityClass(skill.importance)}">${skill.importance}</span>
+                            </div>
+                            <div class="skill-resources">
+                                <p class="resources-label">Resources:</p>
+                                <ul class="resources-list">
+                                    ${skill.resources.map(resource => `<li>${resource}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            <!-- Interview Tips -->
+            <div class="interview-tips-section">
+                <h3 class="section-title">
+                    <i class="fas fa-comments text-green"></i>
+                    Interview Preparation Tips
+                </h3>
+                <div class="tips-grid">
+                    ${guidance.interviewTips.map(tip => `
+                        <div class="tip-card">
+                            <i class="fas fa-lightbulb"></i>
+                            <span>${tip}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Helper functions for styling
+function getScoreClass(score) {
+    if (score >= 80) return 'excellent';
+    if (score >= 60) return 'good';
+    if (score >= 40) return 'average';
+    return 'needs-improvement';
+}
+
+function getStatusClass(status) {
+    const statusMap = {
+        'excellent': 'excellent',
+        'good': 'good',
+        'average': 'average',
+        'needs-improvement': 'needs-improvement'
+    };
+    return statusMap[status] || 'average';
+}
+
+function getPriorityClass(priority) {
+    const priorityMap = {
+        'high': 'high',
+        'medium': 'medium',
+        'low': 'low'
+    };
+    return priorityMap[priority] || 'medium';
+}
+
+function getMatchClass(match) {
+    if (match >= 80) return 'excellent';
+    if (match >= 60) return 'good';
+    if (match >= 40) return 'average';
+    return 'needs-improvement';
+}
+
+// Profile Picture Functions
+function setupProfilePictureUpload() {
+    const profilePictureInput = document.getElementById('profilePictureInput');
+    if (profilePictureInput) {
+        profilePictureInput.addEventListener('change', handleProfilePictureUpload);
+    }
+}
+
+function handleProfilePictureUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const profileImage = document.getElementById('profileImage');
+            const profileIcon = document.getElementById('profileIcon');
+            const removeBtn = document.getElementById('removePictureBtn');
+            
+            profileImage.src = e.target.result;
+            profileImage.style.display = 'block';
+            profileIcon.style.display = 'none';
+            removeBtn.style.display = 'inline-block';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeProfilePicture() {
+    const profileImage = document.getElementById('profileImage');
+    const profileIcon = document.getElementById('profileIcon');
+    const removeBtn = document.getElementById('removePictureBtn');
+    const profilePictureInput = document.getElementById('profilePictureInput');
+    
+    profileImage.src = '';
+    profileImage.style.display = 'none';
+    profileIcon.style.display = 'block';
+    removeBtn.style.display = 'none';
+    profilePictureInput.value = '';
+}
+
+// Profile Edit Functions
+function toggleProfileEdit() {
+    const editBtn = document.getElementById('editProfileBtn');
+    const formActions = document.getElementById('profileFormActions');
+    const inputs = document.querySelectorAll('#profileForm input, #profileForm select, #profileForm textarea');
+    
+    if (editBtn.textContent.includes('Edit')) {
+        // Enable edit mode
+        editBtn.innerHTML = '<i class="fas fa-eye"></i> View';
+        formActions.style.display = 'flex';
+        inputs.forEach(input => {
+            input.removeAttribute('readonly');
+            input.disabled = false;
+        });
+    } else {
+        // Disable edit mode
+        editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit';
+        formActions.style.display = 'none';
+        inputs.forEach(input => {
+            input.setAttribute('readonly', 'readonly');
+            input.disabled = true;
+        });
+    }
+}
+
+function cancelProfileEdit() {
+    toggleProfileEdit();
+    // Reset form to original values
+    loadUserProfile();
+}
+
+// Skills Edit Functions
+function toggleSkillsEdit() {
+    const editBtn = document.getElementById('editSkillsBtn');
+    const skillsDisplay = document.getElementById('skillsDisplay');
+    const skillsEdit = document.getElementById('skillsEdit');
+    
+    if (editBtn.textContent.includes('Edit')) {
+        editBtn.innerHTML = '<i class="fas fa-eye"></i> View';
+        skillsDisplay.style.display = 'none';
+        skillsEdit.style.display = 'block';
+    } else {
+        editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit';
+        skillsDisplay.style.display = 'block';
+        skillsEdit.style.display = 'none';
+    }
+}
+
+function cancelSkillsEdit() {
+    toggleSkillsEdit();
+    // Reset skills to original values
+    loadUserProfile();
+}
+
+async function saveSkills() {
+    const skillsList = document.querySelectorAll('#skillsList .skill-tag');
+    const skills = Array.from(skillsList).map(skillTag => {
+        const text = skillTag.textContent.trim();
+        return text.replace('×', '').trim();
+    });
+    
+    try {
+        const response = await fetch('/api/profile', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ skills: skills })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showNotification('Skills updated successfully!', 'success');
+            toggleSkillsEdit();
+        } else {
+            throw new Error(data.message || 'Failed to update skills');
+        }
+    } catch (error) {
+        console.error('Skills update error:', error);
+        showNotification('Failed to update skills: ' + error.message, 'error');
+    }
+}
+
+// Projects Edit Functions
+function toggleProjectsEdit() {
+    const editBtn = document.getElementById('editProjectsBtn');
+    const projectsDisplay = document.getElementById('projectsDisplay');
+    const projectsEdit = document.getElementById('projectsEdit');
+    
+    if (editBtn.textContent.includes('Edit')) {
+        editBtn.innerHTML = '<i class="fas fa-eye"></i> View';
+        projectsDisplay.style.display = 'none';
+        projectsEdit.style.display = 'block';
+    } else {
+        editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit';
+        projectsDisplay.style.display = 'block';
+        projectsEdit.style.display = 'none';
+    }
+}
+
+function cancelProjectsEdit() {
+    toggleProjectsEdit();
+    // Reset projects to original values
+    loadUserProfile();
+}
+
+async function saveProjects() {
+    const projectItems = document.querySelectorAll('#projectsList .project-item');
+    const projects = Array.from(projectItems).map(projectItem => {
+        const title = projectItem.querySelector('h4')?.textContent || '';
+        const description = projectItem.querySelector('p')?.textContent || '';
+        const technologies = Array.from(projectItem.querySelectorAll('.tag')).map(tag => tag.textContent);
+        const duration = projectItem.querySelector('.project-duration')?.textContent || '';
+        
+        return {
+            title: title,
+            description: description,
+            technologies: technologies,
+            duration: duration
+        };
+    });
+    
+    try {
+        const response = await fetch('/api/profile', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ projects: projects })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showNotification('Projects updated successfully!', 'success');
+            toggleProjectsEdit();
+        } else {
+            throw new Error(data.message || 'Failed to update projects');
+        }
+    } catch (error) {
+        console.error('Projects update error:', error);
+        showNotification('Failed to update projects: ' + error.message, 'error');
+    }
+}
+
+// Refresh guidance
+function refreshGuidance() {
+    const content = document.getElementById('guidanceContent');
+    content.innerHTML = `
+        <div class="guidance-placeholder">
+            <i class="fas fa-graduation-cap"></i>
+            <h3>Ready for Career Guidance?</h3>
+            <p>Click the button above to get personalized career advice based on your profile and resume.</p>
+        </div>
+    `;
 }
 
 function initializeDashboardCharts() {
@@ -752,8 +1677,71 @@ function getCareerGuidance() {
             <h1>Career Guidance</h1>
             <p>Get personalized career advice and improvement suggestions</p>
         </div>
-        <div class="guidance-content">
-            <p>Career guidance feature coming soon...</p>
+        
+        <div class="card mb-6">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-lightbulb"></i> AI-Powered Career Guidance
+                </h3>
+                <p class="text-sm text-gray-600">Get personalized recommendations based on your profile and resume</p>
+            </div>
+            <div class="card-body">
+                <div class="guidance-actions">
+                    <button class="btn btn-primary" onclick="generateCareerGuidance()">
+                        <i class="fas fa-magic"></i> Generate Career Guidance
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshGuidance()">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </div>
+                
+                <div class="guidance-loading" id="guidanceLoading" style="display: none;">
+                    <div class="loading-container">
+                        <div class="loading"></div>
+                        <p>Generating personalized career guidance...</p>
+                    </div>
+                </div>
+                
+                <div class="guidance-content" id="guidanceContent">
+                    <div class="guidance-placeholder">
+                        <i class="fas fa-graduation-cap"></i>
+                        <h3>Ready for Career Guidance?</h3>
+                        <p>Click the button above to get personalized career advice based on your profile and resume.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="guidance-features">
+            <div class="grid grid-cols-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Profile Analysis</h3>
+                    </div>
+                    <div class="card-body">
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> Skills assessment</li>
+                            <li><i class="fas fa-check"></i> Experience evaluation</li>
+                            <li><i class="fas fa-check"></i> Education analysis</li>
+                            <li><i class="fas fa-check"></i> Project portfolio review</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Recommendations</h3>
+                    </div>
+                    <div class="card-body">
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> Career path suggestions</li>
+                            <li><i class="fas fa-check"></i> Skill gap identification</li>
+                            <li><i class="fas fa-check"></i> Interview preparation tips</li>
+                            <li><i class="fas fa-check"></i> Industry insights</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
     `;
 }
